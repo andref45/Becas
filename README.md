@@ -153,32 +153,4 @@ Becas/
 └── README.md               # Este archivo
 ```
 
-### Personalización
 
-**Agregar nuevos campos OCR:**
-1. Modificar `extract_patterns_from_text()` en `app.py`
-2. Actualizar `displayResults()` en `cedula_processor.html`
-
-**Cambiar estilos:**
-- Editar CSS en `cedula_processor.html`
-- Modificar gradientes y colores
-
-## 📈 Próximas Mejoras
-
-- [ ] Soporte para más tipos de documentos
-- [ ] Mejora de precisión OCR
-- [ ] Base de datos para almacenar resultados
-- [ ] Autenticación de usuarios
-- [ ] Procesamiento por lotes
-
-## 🆘 Soporte
-
-Si tienes problemas:
-1. Verificar que Tesseract esté instalado
-2. Confirmar que el backend esté ejecutándose
-3. Revisar logs en consola del navegador
-4. Verificar que las imágenes sean claras y legibles
-
----
-
-**¡Listo para usar!** 🎉
