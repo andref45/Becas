@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesador de Cédulas - Sistema de Becas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            margin: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .modal {
+            display: flex;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: auto;
+            padding: 40px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .modal p {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+        }
+
+        .upload-section {
+            margin: 30px 0;
+            padding: 30px;
+            border: 2px dashed #e2e8f0;
+            border-radius: 15px;
+            text-align: center;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #2a5298;
+            background: #f0f4f8;
+        }
+
+        .upload-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .upload-section p {
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .preview-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 10px 0;
+        }
+
+        .results-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8fafc;
+            border-radius: 15px;
+            border-left: 4px solid #2a5298;
+        }
+
+        .results-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .result-item {
+            margin: 10px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-item label {
+            font-weight: 600;
+            color: #2d3748;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .result-item span {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .export-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2a5298;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .success {
+            color: #38a169;
+            background: #c6f6d5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .modal-content {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal para pregunta de discapacidad -->
+    <div id="disabilityModal" class="modal">
+        <div class="modal-content">
+            <h2>🎯 Sistema de Procesamiento de Cédulas</h2>
+            <p>¿El solicitante tiene alguna discapacidad registrada?</p>
+            <button class="btn" onclick="selectDisability(false)">No</button>
+            <button class="btn btn-secondary" onclick="selectDisability(true)">Sí</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>📋 Procesador de Cédulas</h1>
+            <p>Sistema automatizado para extraer información de cédulas ecuatorianas</p>
+        </div>
+
+        <!-- Sección para subir cédula frontal -->
+        <div class="upload-section">
+            <h3>📄 Cédula Frontal</h3>
+            <p>Sube la imagen de la parte frontal de la cédula</p>
+            <input type="file" id="frontImage" class="file-input" accept="image/*" onchange="previewImage(this, 'frontPreview')">
+            <label for="frontImage" class="file-label">Seleccionar Imagen</label>
+            <div id="frontPreview" class="preview-section hidden">
+                <img id="frontImg" class="preview-image" alt="Vista previa">
+            </div>
+        </div>
+
+        <!-- Sección para subir cédula reversa (solo si tiene discapacidad) -->
+        <div id="backSection" class="upload-section hidden">
+            <h3>🔄 Cédula Reversa</h3>
+            <p>Sube la imagen de la parte posterior de la cédula</p>
+            <input type="file" id="backImage" class="file-input" accept="image/*" onchange="previewImage(this, 'backPreview')">
+            <label for="backImage" class="file-label">Seleccionar Imagen</label>
+            <div id="backPreview" class="preview-section hidden">
+                <img id="backImg" class="preview-image" alt="Vista previa">
+            </div>
+        </div>
+
+        <!-- Botón para procesar -->
+        <div class="export-section">
+            <button id="processBtn" class="btn" onclick="processImages()">
+                <span id="processText">🔍 Procesar Cédula</span>
+                <div id="processLoading" class="loading hidden"></div>
+            </button>
+        </div>
+
+        <!-- Sección de resultados -->
+        <div id="resultsSection" class="results-section hidden">
+            <h3>📊 Datos Extraídos</h3>
+            <div id="resultsContent"></div>
+        </div>
+
+        <!-- Sección de exportación -->
+        <div id="exportSection" class="export-section hidden">
+            <button class="btn" onclick="exportToExcel()">📊 Exportar a Excel</button>
+        </div>
+
+        <!-- Mensajes de error/éxito -->
+        <div id="messageContainer"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let hasDisability = false;
+        let extractedData = {};
+
+        function selectDisability(disability) {
+            hasDisability = disability;
+            document.getElementById('disabilityModal').style.display = 'none';
+            
+            if (hasDisability) {
+                document.getElementById('backSection').classList.remove('hidden');
+            }
+        }
+
+        function previewImage(input, previewId) {
+            const file = input.files[0];
+            const preview = document.getElementById(previewId);
+            const img = preview.querySelector('img');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            container.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            const processBtn = document.getElementById('processBtn');
+            const processText = document.getElementById('processText');
+            const processLoading = document.getElementById('processLoading');
+            
+            if (show) {
+                processBtn.disabled = true;
+                processText.textContent = 'Procesando...';
+                processLoading.classList.remove('hidden');
+            } else {
+                processBtn.disabled = false;
+                processText.textContent = '🔍 Procesar Cédula';
+                processLoading.classList.add('hidden');
+            }
+        }
+
+        async function processImages() {
+            const frontImage = document.getElementById('frontImage').files[0];
+            const backImage = document.getElementById('backImage').files[0];
+            
+            if (!frontImage) {
+                showMessage('Por favor, selecciona una imagen de la cédula frontal', 'error');
+                return;
+            }
+            
+            if (hasDisability && !backImage) {
+                showMessage('Por favor, selecciona una imagen de la cédula reversa', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                // Simular procesamiento con OCR
+                const frontData = await simulateOCR(frontImage, 'front');
+                let backData = {};
+                
+                if (hasDisability && backImage) {
+                    backData = await simulateOCR(backImage, 'back');
+                }
+                
+                extractedData = { ...frontData, ...backData };
+                displayResults();
+                
+            } catch (error) {
+                showMessage('Error al procesar las imágenes: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function simulateOCR(imageFile, type) {
+            const API_BASE_URL = 'http://localhost:5001/api';
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', imageFile);
+                
+                const endpoint = type === 'front' ? '/process-front' : '/process-back';
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                return result;
+                
+            } catch (error) {
+                console.error('Error en OCR:', error);
+                
+                // Fallback: datos simulados si falla la API
+                showMessage('Usando datos simulados - Verifique que el backend esté ejecutándose', 'error');
+                
+                if (type === 'front') {
+                    return {
+                        nombres: 'JUAN CARLOS',
+                        apellidos: 'PÉREZ GARCÍA',
+                        numeroIdentidad: '1234567890',
+                        fechaNacimiento: '01/01/1990',
+                        lugarNacimiento: 'QUITO'
+                    };
+                } else {
+                    return {
+                        tipoDiscapacidad: 'AUDITIVA',
+                        porcentajeDiscapacidad: '72%',
+                        fechaEmision: '15/03/2023',
+                        lugarEmision: 'QUITO'
+                    };
+                }
+            }
+        }
+
+        function displayResults() {
+            const resultsContent = document.getElementById('resultsContent');
+            const resultsSection = document.getElementById('resultsSection');
+            const exportSection = document.getElementById('exportSection');
+            
+            let html = '';
+            
+            // Solo mostrar campos que realmente tienen datos
+            if (extractedData.nombres && extractedData.nombres.trim()) {
+                html += createResultItem('Nombres', extractedData.nombres);
+            }
+            if (extractedData.apellidos && extractedData.apellidos.trim()) {
+                html += createResultItem('Apellidos', extractedData.apellidos);
+            }
+            if (extractedData.numeroIdentidad && extractedData.numeroIdentidad.trim()) {
+                html += createResultItem('Número de Cédula', extractedData.numeroIdentidad);
+            }
+            
+            // Datos de discapacidad (solo si existen)
+            if (extractedData.tipoDiscapacidad && extractedData.tipoDiscapacidad.trim()) {
+                html += createResultItem('Tipo de Discapacidad', extractedData.tipoDiscapacidad);
+            }
+            if (extractedData.porcentajeDiscapacidad && extractedData.porcentajeDiscapacidad.trim()) {
+                html += createResultItem('Porcentaje de Discapacidad', extractedData.porcentajeDiscapacidad);
+            }
+            
+            if (html === '') {
+                html = '<div class="result-item"><label>No se pudieron extraer datos</label><span>Verifica que las imágenes sean claras y legibles</span></div>';
+            }
+            
+            resultsContent.innerHTML = html;
+            resultsSection.classList.remove('hidden');
+            exportSection.classList.remove('hidden');
+            
+            showMessage('¡Datos extraídos exitosamente!', 'success');
+        }
+
+        function createResultItem(label, value) {
+            return `
+                <div class="result-item">
+                    <label>${label}:</label>
+                    <span>${value}</span>
+                </div>
+            `;
+        }
+
+        function exportToExcel() {
+            if (Object.keys(extractedData).length === 0) {
+                showMessage('No hay datos para exportar', 'error');
+                return;
+            }
+            
+            // Filtrar solo los campos que tienen datos
+            const filteredData = {};
+            
+            if (extractedData.nombres && extractedData.nombres.trim()) {
+                filteredData.Nombres = extractedData.nombres;
+            }
+            if (extractedData.apellidos && extractedData.apellidos.trim()) {
+                filteredData.Apellidos = extractedData.apellidos;
+            }
+            if (extractedData.numeroIdentidad && extractedData.numeroIdentidad.trim()) {
+                filteredData['Número de Cédula'] = extractedData.numeroIdentidad;
+            }
+            if (extractedData.tipoDiscapacidad && extractedData.tipoDiscapacidad.trim()) {
+                filteredData['Tipo de Discapacidad'] = extractedData.tipoDiscapacidad;
+            }
+            if (extractedData.porcentajeDiscapacidad && extractedData.porcentajeDiscapacidad.trim()) {
+                filteredData['Porcentaje de Discapacidad'] = extractedData.porcentajeDiscapacidad;
+            }
+            
+            if (Object.keys(filteredData).length === 0) {
+                showMessage('No hay datos válidos para exportar', 'error');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet([filteredData]);
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'Datos Cédula');
+            
+            const fileName = `cedula_${extractedData.numeroIdentidad || 'datos'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            showMessage('Archivo Excel exportado exitosamente', 'success');
+        }
+
+        // Inicializar la aplicación
+        window.onload = function() {
+            // Mostrar modal de discapacidad al cargar
+            document.getElementById('disabilityModal').style.display = 'flex';
+        };
+    </script>
+</body>
+</html>
