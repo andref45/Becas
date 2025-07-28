@@ -7,9 +7,13 @@ from PIL import Image
 import io
 import base64
 import re
-from ultralytics import YOLO
 import os
 import tempfile
+
+# Configuración para evitar problemas de threading
+os.environ['OMP_NUM_THREADS'] = '1'
+
+from ultralytics import YOLO
 
 app = Flask(__name__)
 CORS(app)
@@ -146,41 +150,66 @@ def extract_patterns_from_text(text):
     return datos
 
 def process_back_id_card(image_path):
-    """Procesa reverso de cédula para extraer datos de discapacidad"""
+    """Procesa reverso de cédula para extraer datos de discapacidad - Mejorado"""
     img = cv2.imread(image_path)
     
-    # Preprocesar imagen
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Múltiples configuraciones de OCR para mejor detección
+    configs = [
+        '--psm 6',
+        '--psm 7',
+        '--psm 8',
+        '--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%'
+    ]
     
-    # Aplicar OCR
-    text = pytesseract.image_to_string(thresh, lang='spa', config='--psm 6')
+    all_text = ""
+    
+    # Probar diferentes preprocesados y configuraciones
+    for config in configs:
+        # Preprocesar imagen con diferentes métodos
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # Método 1: Umbralización OTSU
+        _, thresh1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        text1 = pytesseract.image_to_string(thresh1, lang='spa', config=config).strip()
+        
+        # Método 2: Umbralización adaptativa
+        thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+        text2 = pytesseract.image_to_string(thresh2, lang='spa', config=config).strip()
+        
+        all_text += " " + text1 + " " + text2
+    
+    # Normalizar texto
+    full_text = all_text.upper()
     
     datos = {}
     
-    # Buscar tipo de discapacidad
+    # Buscar tipo de discapacidad (patrones mejorados como en el notebook)
     discapacidad_patterns = [
-        r'AUDITIVA',
-        r'VISUAL',
-        r'FÍSICA',
-        r'INTELECTUAL',
-        r'PSICOSOCIAL',
-        r'MÚLTIPLE'
+        (r'AUDITIVA|AUDIIIVA|AUDITI\w*', 'AUDITIVA'),
+        (r'VISUAL', 'VISUAL'),
+        (r'FÍSICA|FISICA|FISIC\w*', 'FÍSICA'),
+        (r'INTELECTUAL|INTELECT\w*', 'INTELECTUAL'),
+        (r'PSICOSOCIAL|PSICO\w*', 'PSICOSOCIAL'),
+        (r'MÚLTIPLE|MULTIPLE|MULTI\w*', 'MÚLTIPLE')
     ]
     
-    for pattern in discapacidad_patterns:
-        if re.search(pattern, text, re.IGNORECASE):
-            datos['tipoDiscapacidad'] = pattern
+    for pattern, tipo in discapacidad_patterns:
+        if re.search(pattern, full_text, re.IGNORECASE):
+            datos['tipoDiscapacidad'] = tipo
             break
     
-    # Buscar porcentaje de discapacidad
-    porcentaje_match = re.search(r'(\d{1,2})%', text)
-    if porcentaje_match:
-        datos['porcentajeDiscapacidad'] = porcentaje_match.group()
+    # Buscar porcentaje de discapacidad (mejorado)
+    porcentaje_matches = re.findall(r'(\d{1,2})%', full_text)
+    if porcentaje_matches:
+        datos['porcentajeDiscapacidad'] = porcentaje_matches[0] + '%'
     
-    # Buscar información adicional
-    if 'DONANTE' in text.upper():
+    # Buscar información adicional (variaciones como en el notebook)
+    if re.search(r'DONANTE|DONANE|DONAN\w*', full_text, re.IGNORECASE):
         datos['donante'] = 'Sí'
+    
+    # Debug: mostrar texto detectado
+    print(f"🔍 Texto completo detectado: {full_text[:200]}...")
+    print(f"📋 Datos extraídos: {datos}")
     
     return datos
 
